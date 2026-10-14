@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>O Pombo Crazy</title>
-<meta name="description" content="Animação: o Pombo Crazy, fiscal do banheiro, encara a criançada até todo mundo lavar as mãos.">
+<meta name="description" content="Animação com rock e palmas: o Pombo Crazy, fiscal do banheiro, encara a criançada até todo mundo lavar as mãos.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&display=swap" rel="stylesheet">
 <style>
@@ -58,7 +58,8 @@
     position: absolute; left: 0; top: 0; overflow: hidden; white-space: nowrap;
     color: var(--accent); width: 0%;
   }
-  .lyrics .note { color: var(--accent); margin-right: .6cqw; }
+  .lyrics .note { color: var(--accent); margin-right: .6cqw; display: inline-block; }
+  .lyrics .note.right { margin: 0 0 0 .6cqw; }
 
   .overlay {
     position: absolute; inset: 0;
@@ -216,6 +217,10 @@
           <circle cx="0" cy="-80" r="84" fill="url(#bodyGrad)"/>
           <ellipse cx="-38" cy="-118" rx="22" ry="11" fill="#fff" opacity=".28" transform="rotate(-35 -38 -118)"/>
           <ellipse cx="44" cy="-46" rx="14" ry="6" fill="#fff" opacity=".12" transform="rotate(30 44 -46)"/>
+          <g id="wing" transform="translate(-58,-92) rotate(-70)">
+            <path d="M0,-20 Q-50,-30 -84,-6 Q-92,4 -80,12 Q-40,26 0,20 Z" fill="#2b2b2b" stroke="#8a8a8a" stroke-width="3"/>
+            <path d="M-30,-14 L-72,-2 M-28,6 L-70,8" stroke="#666" stroke-width="3" stroke-linecap="round"/>
+          </g>
           <g id="pomboHead">
             <rect id="beak" x="-128" y="-258" width="96" height="44" rx="20" fill="url(#beakGrad)"/>
             <rect x="-124" y="-226" width="88" height="8" rx="4" fill="#d79800" opacity=".7"/>
@@ -306,6 +311,7 @@
       </g>
 
       <g id="particles"></g>
+      <g id="clapFx"></g>
       <ellipse id="scorch" cx="0" cy="0" rx="34" ry="8" fill="#2b2622" opacity="0"/>
       <g id="smoke"></g>
       <g id="laser" opacity="0">
@@ -324,7 +330,7 @@
   </svg>
 
   <div class="titleCard" id="titleCard"><h1 class="title">O Pombo <span>Crazy</span></h1></div>
-  <div class="lyrics" id="lyrics"><span class="note">♪</span><span class="wrap"><span class="base" id="lyBase"></span><span class="fill" id="lyFill"></span></span></div>
+  <div class="lyrics" id="lyrics"><span class="note" id="lyIconL">♪</span><span class="wrap"><span class="base" id="lyBase"></span><span class="fill" id="lyFill"></span></span><span class="note right" id="lyIconR"></span></div>
   <button class="soundBtn ghost" id="voiceBtn" title="Liga/desliga a voz do Pombo">🗣️ Voz: on</button>
 
   <div class="overlay" id="startOverlay">
@@ -334,7 +340,7 @@
   </div>
   <div class="overlay hidden" id="endOverlay">
     <h1 class="title">O Pombo <span>Crazy</span></h1>
-    <p class="subtitle">🧼 Foi ao banheiro? Lave as mãos! O Pombo Crazy tá de olho! 👁️</p>
+    <p class="subtitle">👏 Lava uma mão, lava outra… com o Pombo Crazy! 🧼 Ele tá de olho! 👁️</p>
     <div class="row"><button id="replayBtn">↻ Ver de novo</button></div>
   </div>
 </div>
@@ -356,40 +362,61 @@
   const DURATION = 76;
 
   // ---------------------------------------------------------------- song
-  // Each line: [lyric, melody pattern, chord bar 1, chord bar 2]
+  // Rock com palmas, no estilo "lava uma mão, lava outra".
+  // Each line: [lyric, melody pattern, chord bar 1, chord bar 2, section]
   const P = {
     va: [[0,.5,'E4'],[.5,.5,'E4'],[1,.5,'G4'],[1.5,.5,'G4'],[2,.5,'A4'],[2.5,.5,'G4'],[3,1,'E4'],[4,.5,'D4'],[4.5,.5,'E4'],[5,.5,'F4'],[5.5,.5,'E4'],[6,2,'D4']],
     vb: [[0,.5,'C4'],[.5,.5,'E4'],[1,.5,'A4'],[1.5,.5,'A4'],[2,.5,'G4'],[2.5,.5,'E4'],[3,1,'C4'],[4,.5,'F4'],[4.5,.5,'F4'],[5,.5,'A4'],[5.5,.5,'G4'],[6,2,'F4']],
     vd: [[0,.5,'F4'],[.5,.5,'A4'],[1,.5,'C5'],[1.5,.5,'A4'],[2,1,'G4'],[3,1,'E4'],[4,.5,'D4'],[4.5,.5,'E4'],[5,.5,'F4'],[5.5,.5,'G4'],[6,2,'G4']],
-    c1: [[0,.5,'G4'],[.5,.5,'G4'],[1,.5,'A4'],[1.5,.5,'G4'],[2,1.5,'C5'],[4,.5,'G4'],[4.5,.5,'G4'],[5,.5,'A4'],[5.5,.5,'G4'],[6,1.5,'E5']],
-    c2: [[0,.5,'A4'],[.5,.5,'A4'],[1,.5,'C5'],[1.5,.5,'A4'],[2,.5,'G4'],[2.5,.5,'E4'],[3,1,'G4'],[4,.5,'G4'],[4.5,.5,'F4'],[5,.5,'E4'],[5.5,.5,'D4'],[6,2,'D4']],
-    c3: [[0,.5,'E4'],[.5,.5,'G4'],[1,.5,'C5'],[1.5,.5,'C5'],[2,.5,'B4'],[2.5,.5,'A4'],[3,1,'G4'],[4,.5,'A4'],[4.5,.5,'A4'],[5,.5,'G4'],[5.5,.5,'F4'],[6,2,'E4']],
-    c4: [[0,.5,'F4'],[.5,.5,'A4'],[1,.5,'C5'],[1.5,.5,'D5'],[2,1,'C5'],[3,1,'B4'],[4,4,'C5']],
-    intro: [[0,.5,'C5'],[.5,.5,'C5'],[1,.5,'D5'],[1.5,.5,'C5'],[2,1,'G4'],[4,.5,'B4'],[4.5,.5,'B4'],[5,.5,'C5'],[5.5,.5,'B4'],[6,1,'G4']],
+    // La-va u-ma MÃO (pá pá) la-va OU-tra, com o Pom-bo CRA-zy!
+    c1: [[0,.5,'E4'],[.5,.5,'E4'],[1,.5,'G4'],[1.5,.5,'G4'],[2,1,'C5'],[4,.5,'B4'],[4.5,.5,'B4'],[5,.5,'A4'],[5.5,.5,'G4'],[6,.25,'G4'],[6.25,.25,'G4'],[6.5,.25,'A4'],[6.75,.25,'B4'],[7,.5,'D5'],[7.5,.5,'C5']],
+    // Pal-ma com pal-ma, ba-te, ba-te — la-var é EA-sy!
+    c2: [[0,.5,'A4'],[.5,.5,'A4'],[1,.5,'C5'],[1.5,.5,'A4'],[2,.5,'E4'],[2.5,.5,'G4'],[3,.5,'E4'],[3.5,.5,'G4'],[4.5,.5,'F4'],[5,.5,'A4'],[5.5,.5,'C5'],[6,1,'C5'],[7,1,'A4']],
+    // E-le tá de o-lho, não pis-ca não — Pom-bo CRA-zy!
+    c4: [[0,.25,'F4'],[.25,.25,'F4'],[.5,.5,'A4'],[1,.5,'C5'],[1.5,.5,'C5'],[2,.5,'D5'],[2.5,.5,'C5'],[3,.5,'A4'],[3.5,.5,'C5'],[4,.5,'B4'],[4.5,.5,'G4'],[5.5,.5,'G4'],[6,.5,'A4'],[6.5,.5,'B4'],[7,1,'D5']],
+    end: [[0,.5,'F4'],[.5,.5,'A4'],[1,.5,'C5'],[1.5,.5,'D5'],[2,1,'C5'],[3,1,'B4'],[4,4,'C5']],
   };
+  const REFRAO = 'Lava uma mão, lava outra, com o Pombo Crazy!';
   const CHORUS = [
-    ['Já lavou as mãos!? Já lavou as mãos!?', 'c1', 'C', 'Am'],
-    ['Pombo Crazy vai te encarar,', 'c2', 'F', 'G'],
-    ['com o olhão arregalado, sem piscar,', 'c3', 'C', 'Am'],
-    ['até tu essas mãos lavar!', 'c4', 'F', 'C'],
+    [REFRAO, 'c1', 'C', 'G', 'chorus'],
+    ['Palma com palma, bate, bate — lavar é easy!', 'c2', 'Am', 'F', 'chorus'],
+    [REFRAO, 'c1', 'C', 'G', 'chorus'],
+    ['Ele tá de olho, não pisca não — Pombo Crazy!', 'c4', 'F', 'G', 'chorus'],
   ];
   const LINES = [
-    ['', 'intro', 'C', 'G'],
-    ['Entrou no banheiro ligeiro, ligeiro,', 'va', 'C', 'G'],
-    ['fez xixi, deu descarga, que maneiro!', 'vb', 'Am', 'F'],
-    ['Mas quando vai saindo de fininho...', 'va', 'C', 'G'],
-    ['tem um Pombo Crazy no caminho!', 'vd', 'F', 'G'],
+    ['', '', 'C', 'C', 'intro'],
+    ['Entrou no banheiro ligeiro, ligeiro,', 'va', 'C', 'G', 'verse'],
+    ['fez xixi, deu descarga, que maneiro!', 'vb', 'Am', 'F', 'verse'],
+    ['Mas quando vai saindo de fininho...', 'va', 'C', 'G', 'verse'],
+    ['tem um Pombo Crazy no caminho!', 'vd', 'F', 'G', 'verse'],
     ...CHORUS,
-    ['Abre a torneira, pega o sabão,', 'va', 'C', 'G'],
-    ['esfrega a palma, esfrega o dedão,', 'vb', 'Am', 'F'],
-    ['entre os dedinhos, unha também...', 'va', 'C', 'G'],
-    ['tchau, bichinho! Não sobra ninguém!', 'vd', 'F', 'G'],
+    ['Abre a torneira, pega o sabão,', 'va', 'C', 'G', 'verse'],
+    ['esfrega a palma, esfrega o dedão,', 'vb', 'Am', 'F', 'verse'],
+    ['entre os dedinhos, unha também...', 'va', 'C', 'G', 'verse'],
+    ['tchau, bichinho! Não sobra ninguém!', 'vd', 'F', 'G', 'verse'],
     ...CHORUS,
-    ['Pombo Crazy, cru-cru-crazy!', 'c2', 'F', 'G'],
-    ['E você... já lavou as mãos?', 'c4', 'F', 'C'],
-  ].map((l, i) => ({ text: l[0], pat: l[1], chords: [l[2], l[3]], start: i * LINE }));
+    [REFRAO, 'c1', 'C', 'G', 'chorus'],
+    ['E você... já lavou as mãos?', 'end', 'F', 'C', 'break'],
+  ].map((l, i) => ({ text: l[0], pat: l[1], chords: [l[2], l[3]], sec: l[4], start: i * LINE }));
 
-  const CHORDS = { C: [48, 52, 55], G: [43, 47, 50], Am: [45, 48, 52], F: [41, 45, 48] };
+  // palmas: "pá" on 2 & 4; in the chorus, double "pá-pá" — the second one is a high-five
+  const CLAP_BEATS = { intro: [1, 3, 5, 7], break: [1, 3, 5, 7], verse: [1, 3, 5, 7], chorus: [1, 3, 3.5, 5, 7, 7.5] };
+  const STOMP_BEATS = [0, .5, 2, 2.5, 4, 4.5, 6, 6.5];   // boom-boom-PÁ
+  const CLAPS = [];
+  LINES.forEach((line) => CLAP_BEATS[line.sec].forEach((b) =>
+    CLAPS.push({ t: line.start + b * BEAT, kind: line.sec === 'chorus' && b % 1 ? 'hi5' : 'own', sec: line.sec })));
+  function nearestClap(t) {
+    let best = null, d = Infinity;
+    for (const c of CLAPS) { const k = Math.abs(t - c.t); if (k < d) { d = k; best = c; } else if (c.t > t) break; }
+    return best;
+  }
+  function lastClap(t) {
+    let last = null;
+    for (const c of CLAPS) { if (c.t > t) break; last = c; }
+    return last;
+  }
+
+  const POWER = { C: 48, G: 43, Am: 45, F: 41 };   // power chord roots (guitar range)
   const midi = (n) => {
     const m = n.match(/^([A-G])(#?)(\d)$/);
     return { C:0, D:2, E:4, F:5, G:7, A:9, B:11 }[m[1]] + (m[2] ? 1 : 0) + 12 * (+m[3] + 1);
@@ -410,7 +437,10 @@
       for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
     }
     if (master) master.disconnect();
-    master = ctx.createGain(); master.gain.value = 0.8; master.connect(ctx.destination);
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -14; comp.ratio.value = 4; comp.attack.value = 0.005; comp.release.value = 0.15;
+    comp.connect(ctx.destination);
+    master = ctx.createGain(); master.gain.value = 0.9; master.connect(comp);
     music = ctx.createGain(); music.gain.value = 1; music.connect(master);
     sfx = ctx.createGain(); sfx.gain.value = 1; sfx.connect(master);
     voice = ctx.createGain(); voice.gain.value = voiceOn ? 1.4 : 0; voice.connect(master);
@@ -443,42 +473,78 @@
     s.start(start); s.stop(start + dur + 0.05);
   }
 
+  // drums & hands
+  const kick = (st, g = 0.95) => { osc('sine', 170, st, 0.24, g, music, { to: 42, glide: 0.16, attack: 0.002, release: 0.12 }); noise(st, 0.02, 0.25, music, 'lowpass', 3000); };
+  const snare = (st, g = 0.32) => { noise(st, 0.2, g, music, 'highpass', 1200); osc('triangle', 200, st, 0.1, 0.3, music, { to: 150, attack: 0.002 }); };
+  const hat = (st, g = 0.05, open = false) => noise(st, open ? 0.2 : 0.035, g, music, 'highpass', 8000);
+  const crash = (st) => noise(st, 1.8, 0.16, music, 'highpass', 4500, { hold: 0.02 });
+  const stomp = (st) => { osc('sine', 120, st, 0.32, 1, music, { to: 38, glide: 0.25, attack: 0.003, release: 0.15 }); noise(st, 0.12, 0.45, music, 'lowpass', 280); };
+  function clap(st, g = 0.9) {
+    // a real-sounding clap is a few tiny noise slaps followed by a short room tail
+    for (let i = 0; i < 3; i++) noise(st + i * 0.011, 0.024, g, music, 'bandpass', 1300 + i * 120, { q: 1.3 });
+    noise(st + 0.034, 0.22, g * 0.65, music, 'bandpass', 1100, { q: 1 });
+  }
+  function distCurve(k) {
+    const n = 2048, c = new Float32Array(n);
+    for (let i = 0; i < n; i++) { const x = i * 2 / n - 1; c[i] = (3 + k) * x * 20 * Math.PI / 180 / (Math.PI + k * Math.abs(x)); }
+    return c;
+  }
+
   function scheduleSong(T) {
     const lead = ctx.createBiquadFilter(); lead.type = 'lowpass'; lead.frequency.value = 2600; lead.connect(music);
+    // distorted rhythm guitar: saws → fuzz → cabinet
+    const gtrIn = ctx.createGain();
+    const drive = ctx.createWaveShaper(); drive.curve = distCurve(70); drive.oversample = '4x';
+    const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 90;
+    const cab = ctx.createBiquadFilter(); cab.type = 'lowpass'; cab.frequency.value = 3000; cab.Q.value = 0.9;
+    const gtr = ctx.createGain(); gtr.gain.value = 0.1;
+    gtrIn.connect(drive); drive.connect(hp); hp.connect(cab); cab.connect(gtr); gtr.connect(music);
+    const bass = ctx.createBiquadFilter(); bass.type = 'lowpass'; bass.frequency.value = 600; bass.connect(music);
+
+    const power = (root, st, dur, g, muted) =>
+      [0, 7, 12].forEach((iv) => osc('sawtooth', hz(root + iv), st, dur, g, gtrIn, { attack: 0.004, release: muted ? 0.03 : 0.25 }));
+
     LINES.forEach((line, li) => {
-      const L = T + line.start;
-      const isIntro = line.pat === 'intro';
-      // melody
-      P[line.pat].forEach(([b, d, n]) => {
-        const st = L + b * BEAT, du = d * BEAT * 0.92;
-        const m = midi(n);
-        if (isIntro) {
-          osc('triangle', hz(m + 12), st, du, 0.12, lead);
-        } else {
-          osc('square', hz(m), st, du, 0.07, lead);
-          osc('triangle', hz(m + 12), st, du, 0.03, lead);
-        }
+      const L = T + line.start, sec = line.sec;
+      const prev = LINES[li - 1], next = LINES[li + 1];
+      // lead "voice"
+      (P[line.pat] || []).forEach(([b, d, n]) => {
+        const st = L + b * BEAT, du = d * BEAT * 0.9, m = midi(n);
+        osc('square', hz(m), st, du, 0.075, lead);
+        osc('sawtooth', hz(m) * 1.004, st, du, 0.03, lead);
       });
-      // harmony + bass + drums per bar
+      if (prev && prev.sec !== sec && sec !== 'break') crash(L);
+      // boom-boom-PÁ in the intro and the final stare
+      if (sec === 'intro' || sec === 'break') STOMP_BEATS.forEach((b) => stomp(L + b * BEAT));
+
       line.chords.forEach((c, bi) => {
-        const B = L + bi * 4 * BEAT;
-        const tri = CHORDS[c];
-        tri.forEach((m) => osc('sine', hz(m + 12), B, 4 * BEAT, 0.035, music, { attack: 0.05, release: 0.3 }));
+        const B = L + bi * 4 * BEAT, root = POWER[c];
+        if (sec === 'intro') {
+          if (bi === 1) for (let e = 0; e < 8; e++) power(root, B + e * BEAT / 2, 0.14, 0.08 + e * 0.03, true);
+          return;
+        }
+        if (sec === 'break') { power(root, B, 4 * BEAT * 0.95, 0.25, false); return; }
+        const chorus = sec === 'chorus';
         for (let e = 0; e < 8; e++) {
           const st = B + e * BEAT / 2;
-          osc('triangle', hz(tri[0] - 12 + (e % 2 ? 12 : 0)), st, BEAT / 2 * 0.85, 0.2, music);
-          noise(st, 0.04, e % 2 ? 0.05 : 0.03, music, 'highpass', 7000);   // hat
+          const accent = e === 0 || (chorus && e === 4);
+          power(root, st, accent ? BEAT * 0.95 : (chorus ? 0.2 : 0.13), accent ? 0.3 : (chorus ? 0.24 : 0.2), !accent && !chorus);
+          osc('sawtooth', hz(root - 12), st, BEAT / 2 * 0.85, 0.22, bass, { attack: 0.004 });
+          hat(st, chorus ? (e % 2 ? 0.09 : 0.05) : (e % 2 ? 0.06 : 0.035), chorus && e % 2 === 1);
         }
-        for (let q = 0; q < 4; q++) {
-          const st = B + q * BEAT;
-          if (q % 2 === 0) osc('sine', 150, st, 0.16, 0.7, music, { to: 40, glide: 0.14, attack: 0.002, release: 0.1 }); // kick
-          else noise(st, 0.14, 0.2, music, 'highpass', 1500);   // snare
-        }
+        (chorus ? [0, 1.5, 2, 2.5] : [0, 2, 2.5]).forEach((b) => kick(B + b * BEAT));
+        [1, 3].forEach((b) => snare(B + b * BEAT));
       });
+      // snare fill into a new section
+      if (next && next.sec !== sec && sec !== 'intro') for (let i = 0; i < 8; i++) snare(L + 6 * BEAT + i * BEAT / 4, 0.12 + i * 0.03);
+      if (sec === 'intro') for (let i = 0; i < 8; i++) snare(L + 6 * BEAT + i * BEAT / 4, 0.08 + i * 0.03);
     });
-    // final chord
+    // palmas
+    CLAPS.forEach((c) => clap(T + c.t, c.kind === 'hi5' ? 1.1 : (c.sec === 'verse' ? 0.6 : 0.9)));
+    // final power chord
     const end = T + LINES.length * LINE;
-    [60, 64, 67, 72].forEach((m) => osc('triangle', hz(m), end, 2.2, 0.08, music, { release: 1.5 }));
+    crash(end); kick(end); clap(end, 1.1);
+    power(POWER.C, end, 2.4, 0.3, false);
   }
 
   function scheduleSfx(T) {
@@ -592,6 +658,7 @@
   const particlesG = $('particles'), confettiG = $('confetti'), bubblesG = $('bubbles');
   const lyrics = $('lyrics'), lyBase = $('lyBase'), lyFill = $('lyFill');
   const titleCard = $('titleCard');
+  const wing = $('wing'), clapFxG = $('clapFx'), lyIconL = $('lyIconL'), lyIconR = $('lyIconR');
 
   const POMBO = { x: 1300, y: 600 };
   const EYE = { x: POMBO.x + 12, y: POMBO.y - 226 };
@@ -659,6 +726,18 @@
     e: el('rect', { width: 14, height: 8, rx: 2, fill: CONF_COLORS[i % CONF_COLORS.length], opacity: 0 }, confettiG),
     x: Math.random() * 1600, sp: 120 + Math.random() * 160, ph: Math.random() * 10, rot: Math.random() * 360,
   }));
+
+  // "PÁ!" bursts for the clap game (world space)
+  const bursts = [0, 1].map(() => {
+    const g = el('g', { opacity: 0 }, clapFxG);
+    for (let k = 0; k < 8; k++) {
+      const a = k / 8 * Math.PI * 2;
+      el('line', { x1: Math.cos(a) * 26, y1: Math.sin(a) * 26, x2: Math.cos(a) * 48, y2: Math.sin(a) * 48, stroke: '#fff6a8', 'stroke-width': 7, 'stroke-linecap': 'round' }, g);
+    }
+    const txt = el('text', { y: -58, 'text-anchor': 'middle', 'font-size': 52, 'font-weight': 800, fill: '#f9c80e', stroke: '#000', 'stroke-width': 6, 'paint-order': 'stroke', 'font-family': 'Baloo 2, sans-serif' }, g);
+    txt.textContent = 'PÁ!';
+    return { g, txt };
+  });
 
   // speech bubbles (screen space)
   function makeBubble(color) {
@@ -730,8 +809,8 @@
     else if (t < 36) { st.x = 1030; st.pose = 'show'; st.face = t > 31 ? 'worried' : 'shock'; }
     else if (t < 51.5) { st.x = 1030; st.pose = 'wash'; st.face = t > 40 ? 'happy' : 'smile'; }
     else if (t < 68) {
-      st.x = 1030; st.pose = 'celebrate'; st.face = 'big';
-      st.hop = Math.abs(Math.sin((t - 52) * Math.PI / BEAT / 2)) * 22;
+      st.x = 1030; st.pose = 'clapgame'; st.face = 'big';
+      st.hop = Math.abs(Math.sin((t - 52) * Math.PI / BEAT / 2)) * 10;
       if (between(t, 59.6, 62.3)) { st.pose = 'show'; st.face = 'shock'; st.hop = 0; }
     }
     else if (t < 72) {
@@ -754,6 +833,15 @@
         const r = t > 38 && t < 50.5 ? 1 : 0.2;
         return { sh, b: { x: 84 + Math.sin(t * 14) * 8 * r, y: -228 + Math.cos(t * 14) * 5 * r }, f: { x: 96 - Math.sin(t * 14) * 8 * r, y: -236 - Math.cos(t * 14) * 5 * r } };
       }
+      case 'clapgame': {
+        // hands open between claps, meet in front on "pá", reach the Pombo's wing on the high-five
+        const c = nearestClap(t);
+        const w = c ? smooth(clamp(1 - Math.abs(t - c.t) / 0.2)) : 0;
+        const rest = { b: { x: 34, y: -262 + Math.sin(t * 8) * 4 }, f: { x: 116, y: -262 - Math.sin(t * 8) * 4 } };
+        const hit = c && c.kind === 'hi5' ? { b: { x: 108, y: -300 }, f: { x: 122, y: -314 } } : { b: { x: 70, y: -238 }, f: { x: 82, y: -238 } };
+        const mix = (a, b) => ({ x: lerp(a.x, b.x, w), y: lerp(a.y, b.y, w) });
+        return { sh, b: mix(rest.b, hit.b), f: mix(rest.f, hit.f) };
+      }
       case 'celebrate': return { sh, shB: { x: -30, y: -205 }, shF: { x: 36, y: -205 }, b: { x: -50 + Math.sin(t * 9) * 8, y: -320 }, f: { x: 66 - Math.sin(t * 9) * 8, y: -322 } };
       case 'wave': return { sh, shF: { x: 30, y: -205 }, b: { x: -Math.sin(ph) * 25, y: -124 }, f: { x: 74 + Math.sin(t * 14) * 12, y: -318 } };
       default: return { sh, b: { x: -14, y: -124 }, f: { x: 18, y: -124 } };
@@ -769,6 +857,11 @@
     on(face.mouthO, kind === 'shock');
     on(face.mouthBig, kind === 'big');
     on(face.mouthWorried, kind === 'worried');
+  }
+
+  function clapPulseAny(t) {
+    const c = lastClap(t);
+    return c ? Math.exp(-(t - c.t) * 12) : 0;
   }
 
   // ---------------------------------------------------------------- render
@@ -876,10 +969,23 @@
     if (between(t, 36.6, 37.1)) squash = 1 - Math.sin(seg(t, 36.6, 37.1) * Math.PI) * 0.12; // pump!
     const alertK = fade(t, 18.4, 19.4, 0.1);
     if (alertK > 0) bounce = Math.max(bounce, alertK * 22);
+    // every clap gives the Pombo a little jolt
+    const lc = lastClap(t);
+    const clapPulse = lc && t > 4 ? Math.exp(-(t - lc.t) * 14) : 0;
+    if (between(t, 20, 52)) squash = Math.min(squash, 1 - 0.05 * clapPulse);
     const jit = anger * Math.sin(t * 70) * 2.5;
     pombo.setAttribute('transform', `translate(${POMBO.x + jit},${POMBO.y - bounce})`);
     angerMark.setAttribute('opacity', anger);
     angerMark.setAttribute('transform', `translate(70,-345) scale(${0.8 + 0.25 * Math.abs(Math.sin(t * 8))}) translate(-70,345)`);
+
+    // wing: high-fives in the clap game, waves goodbye in the outro
+    const nc = nearestClap(t);
+    const nw = nc ? smooth(clamp(1 - Math.abs(t - nc.t) / 0.2)) : 0;
+    let wingA = -70;
+    if (st.pose === 'clapgame') wingA = nc.kind === 'hi5' ? lerp(-70, 22, nw) : -70 + 12 * nw;
+    else if (between(t, 20, 52) && nc) wingA = -70 + (nc.kind === 'hi5' ? 45 : 14) * nw;
+    else if (between(t, 68, 72)) wingA = 5 + Math.sin(t * 14) * 28;
+    wing.setAttribute('transform', `translate(-58,-92) rotate(${wingA})`);
     pomboHead.setAttribute('transform', `translate(0,-140) scale(1,${squash}) translate(0,140)`);
     alertEl.setAttribute('opacity', alertK);
     alertEl.setAttribute('transform', `translate(20,-400) scale(${0.6 + 0.5 * alertK}) translate(-20,400)`);
@@ -984,6 +1090,18 @@
     else if (between(t, 62.2, 64.6)) { kText = 'JÁ!! 🙌'; kOp = fade(t, 62.2, 64.6, 0.2); }
     kidBubble.set(kText, kAnchor.x, kAnchor.y, kOp * st.visible, 'right');
 
+    // "PÁ!" bursts where the hands meet
+    bursts.forEach((b) => b.g.setAttribute('opacity', 0));
+    if (st.pose === 'clapgame' && lc && t - lc.t < 0.22) {
+      const b = bursts[CLAPS.indexOf(lc) % 2];
+      const k = (t - lc.t) / 0.22;
+      const hi5 = lc.kind === 'hi5';
+      const x = hi5 ? 1170 : st.x + 76 * KID_SCALE, y = hi5 ? 492 - bounce : FLOOR - 238 * KID_SCALE - st.hop;
+      b.g.setAttribute('transform', `translate(${x},${y}) scale(${(hi5 ? 0.9 : 0.6) + k * 0.6})`);
+      b.g.setAttribute('opacity', 1 - k);
+      b.txt.setAttribute('opacity', hi5 ? 1 : 0);
+    }
+
     // confetti in the second chorus
     const confOn = between(t, 52, 68.5);
     confetti.forEach((c) => {
@@ -997,7 +1115,7 @@
     // title card at the start
     const tc = fade(t, 0.2, 3.8, 0.5);
     titleCard.style.opacity = tc;
-    titleCard.style.transform = `scale(${0.9 + 0.1 * tc})`;
+    titleCard.style.transform = `scale(${0.9 + 0.1 * tc + 0.06 * clapPulseAny(t)})`;
 
     // lyrics (karaoke)
     const li = Math.floor(t / LINE);
@@ -1006,6 +1124,11 @@
       if (lyBase.textContent !== line.text) { lyBase.textContent = line.text; lyFill.textContent = line.text; }
       lyFill.style.width = (clamp((t - line.start) / (LINE * 0.85)) * 100) + '%';
       lyrics.classList.add('on');
+      const clappy = line.sec !== 'verse';
+      const icon = clappy ? '👏' : '♪';
+      if (lyIconL.textContent !== icon) { lyIconL.textContent = icon; lyIconR.textContent = clappy ? '👏' : ''; }
+      const pop = `scale(${1 + 0.6 * clapPulseAny(t)}) rotate(${clapPulseAny(t) * 18}deg)`;
+      lyIconL.style.transform = pop; lyIconR.style.transform = pop;
     } else lyrics.classList.remove('on');
   }
 
