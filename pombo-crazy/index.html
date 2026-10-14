@@ -1,0 +1,948 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>O Pombo Crazy</title>
+<meta name="description" content="Animação: o Pombo Crazy, fiscal do banheiro, encara a criançada até todo mundo lavar as mãos.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #1b1a18;
+    --ink: #fffbe6;
+    --accent: #f9c80e;
+    --head: #f4eba4;
+    --panel: rgba(20, 18, 14, 0.78);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #1b1a18; }
+  }
+  :root[data-theme="dark"] { --bg: #1b1a18; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Baloo 2", "Comic Sans MS", system-ui, sans-serif;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh; padding: 16px;
+  }
+  .stage {
+    position: relative;
+    width: min(100%, calc((100vh - 32px) * 16 / 9));
+    aspect-ratio: 16 / 9;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,.5);
+    container-type: inline-size;
+    background: #4a4640;
+  }
+  svg#scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+  .lyrics {
+    position: absolute; left: 50%; bottom: 2.2cqw; transform: translateX(-50%);
+    max-width: 92%;
+    background: var(--panel);
+    padding: .4cqw 2cqw;
+    border-radius: 2cqw;
+    font-size: 3cqw; font-weight: 800; line-height: 1.25;
+    text-align: center; white-space: nowrap;
+    opacity: 0; transition: opacity .3s;
+    pointer-events: none;
+  }
+  .lyrics.on { opacity: 1; }
+  .lyrics .wrap { position: relative; display: inline-block; }
+  .lyrics .base { color: rgba(255,255,255,.55); }
+  .lyrics .fill {
+    position: absolute; left: 0; top: 0; overflow: hidden; white-space: nowrap;
+    color: var(--accent); width: 0%;
+  }
+  .lyrics .note { color: var(--accent); margin-right: .6cqw; }
+
+  .overlay {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 1.4cqw; text-align: center;
+    background: radial-gradient(ellipse at center, rgba(0,0,0,.25), rgba(0,0,0,.72));
+    transition: opacity .6s;
+  }
+  .overlay.hidden { opacity: 0; pointer-events: none; }
+  .title {
+    font-size: 9cqw; font-weight: 800; line-height: .95; margin: 0;
+    color: var(--head);
+    text-shadow: .5cqw .5cqw 0 #000, 0 0 3cqw rgba(249,200,14,.5);
+    transform: rotate(-3deg);
+  }
+  .title span { color: var(--accent); }
+  .subtitle { font-size: 2.4cqw; font-weight: 600; margin: 0; max-width: 70%; }
+  button {
+    font: inherit; font-weight: 800; font-size: 2.6cqw;
+    padding: .8cqw 3cqw; border-radius: 99px; border: .35cqw solid #000;
+    background: var(--accent); color: #000; cursor: pointer;
+    box-shadow: 0 .5cqw 0 #000;
+  }
+  button:hover { transform: translateY(-2px); }
+  button:active { transform: translateY(.4cqw); box-shadow: 0 .1cqw 0 #000; }
+  .row { display: flex; gap: 1.5cqw; flex-wrap: wrap; justify-content: center; }
+  .ghost { background: transparent; color: var(--ink); border-color: var(--ink); box-shadow: none; font-size: 1.8cqw; }
+  .titleCard {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    pointer-events: none; opacity: 0;
+  }
+  .soundBtn {
+    position: absolute; top: 1.2cqw; right: 1.2cqw; font-size: 1.6cqw; padding: .3cqw 1.2cqw;
+    box-shadow: none; border-width: .2cqw; display: none;
+  }
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <svg id="scene" viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg" aria-label="Animação O Pombo Crazy">
+    <defs>
+      <pattern id="tiles" width="200" height="200" patternUnits="userSpaceOnUse">
+        <polygon points="0,0 200,0 100,100" fill="#77726a"/>
+        <polygon points="200,0 200,200 100,100" fill="#5c5851"/>
+        <polygon points="0,200 200,200 100,100" fill="#4b4741"/>
+        <polygon points="0,0 0,200 100,100" fill="#6a655d"/>
+        <path d="M100,100 L0,0 M100,100 L200,0 M100,100 L0,200 M100,100 L200,200" stroke="#3e3b36" stroke-width="1.5" opacity=".6"/>
+        <rect x="0" y="0" width="200" height="200" fill="none" stroke="#9c978f" stroke-width="3"/>
+      </pattern>
+      <pattern id="floor" width="80" height="70" patternUnits="userSpaceOnUse">
+        <rect width="80" height="70" fill="#d9d6cf"/>
+        <rect width="80" height="70" fill="none" stroke="#b9b5ad" stroke-width="2"/>
+      </pattern>
+      <radialGradient id="bodyGrad" cx="35%" cy="30%" r="75%">
+        <stop offset="0" stop-color="#3a3a3a"/>
+        <stop offset=".45" stop-color="#121212"/>
+        <stop offset="1" stop-color="#000"/>
+      </radialGradient>
+      <linearGradient id="headGrad" x1="0" x2="1">
+        <stop offset="0" stop-color="#e9dd8f"/>
+        <stop offset=".35" stop-color="#f7efb2"/>
+        <stop offset="1" stop-color="#ddd083"/>
+      </linearGradient>
+      <linearGradient id="beakGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#ffd21c"/>
+        <stop offset="1" stop-color="#eaa800"/>
+      </linearGradient>
+      <linearGradient id="chrome" x1="0" x2="1">
+        <stop offset="0" stop-color="#8d939b"/>
+        <stop offset=".5" stop-color="#e8ecf0"/>
+        <stop offset="1" stop-color="#9aa0a8"/>
+      </linearGradient>
+      <radialGradient id="vignette" cx="50%" cy="50%" r="70%">
+        <stop offset=".45" stop-color="#000" stop-opacity="0"/>
+        <stop offset="1" stop-color="#1a0000" stop-opacity=".9"/>
+      </radialGradient>
+      <linearGradient id="mirrorGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#cfe3ea"/>
+        <stop offset="1" stop-color="#93b3bf"/>
+      </linearGradient>
+    </defs>
+
+    <g id="camera">
+      <!-- wall -->
+      <rect x="-200" y="-200" width="2000" height="1100" fill="url(#tiles)"/>
+      <!-- floor -->
+      <rect x="-200" y="830" width="2000" height="300" fill="url(#floor)"/>
+      <rect x="-200" y="826" width="2000" height="8" fill="#bdb8ae"/>
+
+      <!-- mirror -->
+      <g>
+        <rect x="900" y="80" width="460" height="330" rx="26" fill="#e9e6df"/>
+        <rect x="914" y="94" width="432" height="302" rx="18" fill="url(#mirrorGrad)"/>
+        <path d="M960,370 L1080,110 M1010,380 L1120,140" stroke="#fff" stroke-width="14" opacity=".35" stroke-linecap="round"/>
+      </g>
+
+      <!-- exit door -->
+      <g>
+        <rect x="40" y="300" width="220" height="530" fill="#fff4cf"/>
+        <rect x="30" y="290" width="240" height="10" fill="#6b4a2b"/>
+        <g id="exitDoor">
+          <rect x="40" y="300" width="220" height="530" fill="#a8743f" stroke="#6b4a2b" stroke-width="6"/>
+          <rect x="70" y="340" width="160" height="190" rx="8" fill="none" stroke="#8b5e33" stroke-width="5"/>
+          <rect x="70" y="570" width="160" height="220" rx="8" fill="none" stroke="#8b5e33" stroke-width="5"/>
+          <circle cx="232" cy="560" r="11" fill="#e3c26b" stroke="#6b4a2b" stroke-width="3"/>
+        </g>
+        <rect x="80" y="225" width="140" height="50" rx="8" fill="#1f9d55" stroke="#0c5c31" stroke-width="4"/>
+        <text x="150" y="261" text-anchor="middle" font-size="32" font-weight="800" fill="#fff" font-family="Baloo 2, sans-serif">SAÍDA</text>
+      </g>
+
+      <!-- toilet stall -->
+      <g>
+        <rect x="360" y="220" width="270" height="610" fill="#3c8c8e"/>
+        <rect x="380" y="250" width="230" height="580" fill="#262626"/>
+        <!-- toilet visible inside -->
+        <g opacity=".85">
+          <rect x="470" y="660" width="70" height="90" rx="10" fill="#e9e9e9"/>
+          <ellipse cx="505" cy="760" rx="60" ry="22" fill="#f4f4f4"/>
+          <rect x="475" y="770" width="60" height="60" fill="#e0e0e0"/>
+        </g>
+        <g id="stallDoor">
+          <rect x="380" y="250" width="230" height="580" rx="6" fill="#5fb8b9" stroke="#3c8c8e" stroke-width="5"/>
+          <circle cx="495" cy="380" r="46" fill="#fff" stroke="#3c8c8e" stroke-width="5"/>
+          <text x="495" y="398" text-anchor="middle" font-size="46" font-weight="800" fill="#3c8c8e" font-family="Baloo 2, sans-serif">WC</text>
+          <rect x="580" y="540" width="14" height="40" rx="4" fill="#d0d0d0"/>
+        </g>
+        <text id="flushText" x="495" y="200" text-anchor="middle" font-size="64" font-weight="800" fill="#7fd3ff" stroke="#0b3954" stroke-width="5" paint-order="stroke" font-family="Baloo 2, sans-serif" opacity="0">FLUSH!</text>
+      </g>
+
+      <!-- counter + sink -->
+      <g>
+        <rect x="700" y="630" width="920" height="200" fill="#e6e3dc"/>
+        <rect x="760" y="660" width="260" height="150" rx="6" fill="none" stroke="#cfcbc2" stroke-width="5"/>
+        <rect x="1060" y="660" width="260" height="150" rx="6" fill="none" stroke="#cfcbc2" stroke-width="5"/>
+        <rect x="1360" y="660" width="220" height="150" rx="6" fill="none" stroke="#cfcbc2" stroke-width="5"/>
+        <rect x="690" y="596" width="940" height="38" rx="6" fill="#f6f5f1"/>
+        <rect x="690" y="596" width="940" height="8" rx="4" fill="#fff"/>
+        <ellipse cx="1150" cy="608" rx="120" ry="10" fill="#c9c9c5"/>
+        <!-- faucet -->
+        <rect x="1180" y="560" width="30" height="40" rx="6" fill="url(#chrome)"/>
+        <path d="M1195,566 L1195,520 Q1195,500 1175,500 L1150,500 Q1138,500 1138,512 L1138,530" fill="none" stroke="url(#chrome)" stroke-width="16" stroke-linecap="round"/>
+        <rect x="1215" y="570" width="34" height="10" rx="5" fill="#b9bfc6"/>
+      </g>
+      <!-- water -->
+      <rect id="water" x="1131" y="534" width="14" height="70" rx="7" fill="#9fdcff" opacity="0"/>
+
+      <!-- Pombo Crazy -->
+      <g id="pombo" transform="translate(1300,600)">
+        <ellipse cx="0" cy="2" rx="95" ry="12" fill="#000" opacity=".25"/>
+        <g id="pomboBody">
+          <circle cx="0" cy="-80" r="84" fill="url(#bodyGrad)"/>
+          <ellipse cx="-38" cy="-118" rx="22" ry="11" fill="#fff" opacity=".28" transform="rotate(-35 -38 -118)"/>
+          <ellipse cx="44" cy="-46" rx="14" ry="6" fill="#fff" opacity=".12" transform="rotate(30 44 -46)"/>
+          <g id="pomboHead">
+            <rect id="beak" x="-128" y="-258" width="96" height="44" rx="20" fill="url(#beakGrad)"/>
+            <rect x="-124" y="-226" width="88" height="8" rx="4" fill="#d79800" opacity=".7"/>
+            <path d="M-62,-140 L-62,-300 A62,62 0 0 1 62,-300 L62,-140 Z" fill="url(#headGrad)"/>
+            <path d="M-62,-140 L62,-140" stroke="#cfc27a" stroke-width="4"/>
+            <ellipse cx="-22" cy="-330" rx="14" ry="22" fill="#fff" opacity=".35"/>
+            <g id="eyeGroup" transform="translate(12,-226)">
+              <g id="eyeOpen">
+                <circle id="eyeWhite" cx="0" cy="0" r="37" fill="#fdfdfb" stroke="#e8e4d6" stroke-width="2"/>
+                <circle id="pupil" cx="0" cy="0" r="7" fill="#111"/>
+                <circle id="pupilShine" cx="-2" cy="-3" r="2" fill="#fff" opacity=".7"/>
+              </g>
+              <g id="eyeHappy" opacity="0">
+                <path d="M-26,8 Q0,-26 26,8" fill="none" stroke="#111" stroke-width="7" stroke-linecap="round"/>
+                <ellipse cx="34" cy="34" rx="16" ry="9" fill="#ff8fa3" opacity=".7"/>
+              </g>
+            </g>
+          </g>
+        </g>
+        <text id="alert" x="20" y="-400" text-anchor="middle" font-size="110" font-weight="800" fill="#ff3b30" stroke="#000" stroke-width="6" paint-order="stroke" font-family="Baloo 2, sans-serif" opacity="0">!</text>
+      </g>
+
+      <!-- foam drop -->
+      <g id="foamDrop" opacity="0">
+        <circle cx="0" cy="0" r="16" fill="#fff"/>
+        <circle cx="12" cy="-8" r="10" fill="#fff"/>
+        <circle cx="-10" cy="-6" r="9" fill="#fff"/>
+      </g>
+
+      <!-- Kid -->
+      <g id="kid">
+        <ellipse id="kidShadow" cx="0" cy="2" rx="55" ry="9" fill="#000" opacity=".2"/>
+        <g id="kidBody">
+          <line id="armBack" x1="0" y1="-200" x2="0" y2="-120" stroke="#e0ac85" stroke-width="20" stroke-linecap="round"/>
+          <g id="legBack"><rect x="-6" y="-112" width="22" height="104" rx="10" fill="#2f5aa8"/><ellipse cx="12" cy="-6" rx="20" ry="10" fill="#222"/></g>
+          <g id="legFront"><rect x="-16" y="-112" width="22" height="104" rx="10" fill="#3d6cc4"/><ellipse cx="2" cy="-6" rx="20" ry="10" fill="#333"/></g>
+          <rect x="-40" y="-140" width="80" height="44" rx="10" fill="#3d6cc4"/>
+          <rect x="-46" y="-220" width="92" height="96" rx="26" fill="#ff6b3d"/>
+          <path d="M0,-196 l7,14 15,2 -11,10 3,15 -14,-7 -14,7 3,-15 -11,-10 15,-2z" fill="#ffd23f"/>
+          <g id="head">
+            <circle cx="6" cy="-268" r="50" fill="#f2c29b"/>
+            <path d="M-44,-280 Q-40,-330 8,-326 Q52,-324 56,-282 Q40,-300 20,-296 Q30,-310 12,-312 Q0,-296 -20,-300 Q-30,-292 -44,-280Z" fill="#5a3418"/>
+            <circle cx="-38" cy="-266" r="10" fill="#e8b38b"/>
+            <g id="eyesNormal">
+              <ellipse cx="18" cy="-270" rx="5" ry="7" fill="#222"/>
+              <ellipse cx="40" cy="-270" rx="5" ry="7" fill="#222"/>
+            </g>
+            <g id="eyesShock" opacity="0">
+              <circle cx="18" cy="-272" r="10" fill="#fff" stroke="#222" stroke-width="2"/>
+              <circle cx="40" cy="-272" r="10" fill="#fff" stroke="#222" stroke-width="2"/>
+              <circle cx="20" cy="-272" r="3.5" fill="#222"/>
+              <circle cx="42" cy="-272" r="3.5" fill="#222"/>
+            </g>
+            <g id="eyesHappy" opacity="0">
+              <path d="M11,-268 Q18,-279 25,-268" fill="none" stroke="#222" stroke-width="4" stroke-linecap="round"/>
+              <path d="M33,-268 Q40,-279 47,-268" fill="none" stroke="#222" stroke-width="4" stroke-linecap="round"/>
+            </g>
+            <ellipse cx="50" cy="-250" rx="8" ry="5" fill="#ff8fa3" opacity=".6"/>
+            <path id="mouthSmile" d="M20,-246 Q32,-234 44,-246" fill="none" stroke="#7a2a1a" stroke-width="4" stroke-linecap="round"/>
+            <ellipse id="mouthO" cx="32" cy="-242" rx="7" ry="10" fill="#7a2a1a" opacity="0"/>
+            <path id="mouthBig" d="M18,-248 Q32,-226 46,-248Z" fill="#7a2a1a" opacity="0"/>
+            <path id="mouthWorried" d="M20,-240 Q26,-247 32,-241 Q38,-235 44,-242" fill="none" stroke="#7a2a1a" stroke-width="4" stroke-linecap="round" opacity="0"/>
+            <g id="sweat" opacity="0">
+              <path d="M-30,-320 q-8,14 0,18 q8,-4 0,-18z" fill="#7fd3ff"/>
+              <path d="M62,-310 q-7,12 0,16 q7,-4 0,-16z" fill="#7fd3ff"/>
+            </g>
+          </g>
+          <line id="armFront" x1="0" y1="-200" x2="0" y2="-120" stroke="#f2c29b" stroke-width="20" stroke-linecap="round"/>
+          <circle id="handBack" cx="0" cy="-120" r="13" fill="#e0ac85"/>
+          <circle id="handFront" cx="0" cy="-120" r="13" fill="#f2c29b"/>
+          <g id="germs"></g>
+          <g id="handFoam" opacity="0"></g>
+          <g id="sparkles" opacity="0"></g>
+        </g>
+      </g>
+
+      <g id="particles"></g>
+    </g>
+
+    <rect id="vig" x="0" y="0" width="1600" height="900" fill="url(#vignette)" opacity="0" pointer-events="none"/>
+    <g id="confetti"></g>
+    <g id="bubbles"></g>
+  </svg>
+
+  <div class="titleCard" id="titleCard"><h1 class="title">O Pombo <span>Crazy</span></h1></div>
+  <div class="lyrics" id="lyrics"><span class="note">♪</span><span class="wrap"><span class="base" id="lyBase"></span><span class="fill" id="lyFill"></span></span></div>
+  <button class="soundBtn ghost" id="voiceBtn" title="Liga/desliga a voz do Pombo">🗣️ Voz: on</button>
+
+  <div class="overlay" id="startOverlay">
+    <h1 class="title">O Pombo <span>Crazy</span></h1>
+    <p class="subtitle">O fiscal do banheiro que não pisca até você lavar as mãos!</p>
+    <div class="row"><button id="playBtn">▶ Assistir com som</button></div>
+  </div>
+  <div class="overlay hidden" id="endOverlay">
+    <h1 class="title">O Pombo <span>Crazy</span></h1>
+    <p class="subtitle">🧼 Foi ao banheiro? Lave as mãos! O Pombo Crazy tá de olho! 👁️</p>
+    <div class="row"><button id="replayBtn">↻ Ver de novo</button></div>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+  const NS = 'http://www.w3.org/2000/svg';
+  const $ = (id) => document.getElementById(id);
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const lerp = (a, b, k) => a + (b - a) * k;
+  const smooth = (k) => k * k * (3 - 2 * k);
+  const seg = (t, a, b) => clamp((t - a) / (b - a));
+  const between = (t, a, b) => t >= a && t < b;
+  const fade = (t, a, b, f = 0.3) => Math.min(seg(t, a, a + f), 1 - seg(t, b - f, b));
+
+  const BEAT = 0.5;          // 120 BPM
+  const LINE = 4;            // 2 bars per lyric line
+  const DURATION = 76;
+
+  // ---------------------------------------------------------------- song
+  // Each line: [lyric, melody pattern, chord bar 1, chord bar 2]
+  const P = {
+    va: [[0,.5,'E4'],[.5,.5,'E4'],[1,.5,'G4'],[1.5,.5,'G4'],[2,.5,'A4'],[2.5,.5,'G4'],[3,1,'E4'],[4,.5,'D4'],[4.5,.5,'E4'],[5,.5,'F4'],[5.5,.5,'E4'],[6,2,'D4']],
+    vb: [[0,.5,'C4'],[.5,.5,'E4'],[1,.5,'A4'],[1.5,.5,'A4'],[2,.5,'G4'],[2.5,.5,'E4'],[3,1,'C4'],[4,.5,'F4'],[4.5,.5,'F4'],[5,.5,'A4'],[5.5,.5,'G4'],[6,2,'F4']],
+    vd: [[0,.5,'F4'],[.5,.5,'A4'],[1,.5,'C5'],[1.5,.5,'A4'],[2,1,'G4'],[3,1,'E4'],[4,.5,'D4'],[4.5,.5,'E4'],[5,.5,'F4'],[5.5,.5,'G4'],[6,2,'G4']],
+    c1: [[0,.5,'G4'],[.5,.5,'G4'],[1,.5,'A4'],[1.5,.5,'G4'],[2,1.5,'C5'],[4,.5,'G4'],[4.5,.5,'G4'],[5,.5,'A4'],[5.5,.5,'G4'],[6,1.5,'E5']],
+    c2: [[0,.5,'A4'],[.5,.5,'A4'],[1,.5,'C5'],[1.5,.5,'A4'],[2,.5,'G4'],[2.5,.5,'E4'],[3,1,'G4'],[4,.5,'G4'],[4.5,.5,'F4'],[5,.5,'E4'],[5.5,.5,'D4'],[6,2,'D4']],
+    c3: [[0,.5,'E4'],[.5,.5,'G4'],[1,.5,'C5'],[1.5,.5,'C5'],[2,.5,'B4'],[2.5,.5,'A4'],[3,1,'G4'],[4,.5,'A4'],[4.5,.5,'A4'],[5,.5,'G4'],[5.5,.5,'F4'],[6,2,'E4']],
+    c4: [[0,.5,'F4'],[.5,.5,'A4'],[1,.5,'C5'],[1.5,.5,'D5'],[2,1,'C5'],[3,1,'B4'],[4,4,'C5']],
+    intro: [[0,.5,'C5'],[.5,.5,'C5'],[1,.5,'D5'],[1.5,.5,'C5'],[2,1,'G4'],[4,.5,'B4'],[4.5,.5,'B4'],[5,.5,'C5'],[5.5,.5,'B4'],[6,1,'G4']],
+  };
+  const CHORUS = [
+    ['Já lavou as mãos!? Já lavou as mãos!?', 'c1', 'C', 'Am'],
+    ['Pombo Crazy vai te encarar,', 'c2', 'F', 'G'],
+    ['com o olhão arregalado, sem piscar,', 'c3', 'C', 'Am'],
+    ['até tu essas mãos lavar!', 'c4', 'F', 'C'],
+  ];
+  const LINES = [
+    ['', 'intro', 'C', 'G'],
+    ['Entrou no banheiro ligeiro, ligeiro,', 'va', 'C', 'G'],
+    ['fez xixi, deu descarga, que maneiro!', 'vb', 'Am', 'F'],
+    ['Mas quando vai saindo de fininho...', 'va', 'C', 'G'],
+    ['tem um Pombo Crazy no caminho!', 'vd', 'F', 'G'],
+    ...CHORUS,
+    ['Abre a torneira, pega o sabão,', 'va', 'C', 'G'],
+    ['esfrega a palma, esfrega o dedão,', 'vb', 'Am', 'F'],
+    ['entre os dedinhos, unha também...', 'va', 'C', 'G'],
+    ['tchau, bichinho! Não sobra ninguém!', 'vd', 'F', 'G'],
+    ...CHORUS,
+    ['Pombo Crazy, cru-cru-crazy!', 'c2', 'F', 'G'],
+    ['E você... já lavou as mãos?', 'c4', 'F', 'C'],
+  ].map((l, i) => ({ text: l[0], pat: l[1], chords: [l[2], l[3]], start: i * LINE }));
+
+  const CHORDS = { C: [48, 52, 55], G: [43, 47, 50], Am: [45, 48, 52], F: [41, 45, 48] };
+  const midi = (n) => {
+    const m = n.match(/^([A-G])(#?)(\d)$/);
+    return { C:0, D:2, E:4, F:5, G:7, A:9, B:11 }[m[1]] + (m[2] ? 1 : 0) + 12 * (+m[3] + 1);
+  };
+  const hz = (m) => 440 * Math.pow(2, (m - 69) / 12);
+
+  // ---------------------------------------------------------------- audio
+  let ctx = null, master, music, sfx, noiseBuf, t0 = 0, perf0 = 0, playing = false;
+  let voiceOn = true;
+  const scheduledSpeech = [];
+
+  function initAudio() {
+    if (!ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      ctx = new AC();
+      noiseBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+      const d = noiseBuf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    }
+    if (master) master.disconnect();
+    master = ctx.createGain(); master.gain.value = 0.8; master.connect(ctx.destination);
+    music = ctx.createGain(); music.gain.value = 1; music.connect(master);
+    sfx = ctx.createGain(); sfx.gain.value = 1; sfx.connect(master);
+  }
+
+  function osc(type, freq, start, dur, gain, dest, opts = {}) {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, start);
+    if (opts.to) o.frequency.exponentialRampToValueAtTime(opts.to, start + (opts.glide || dur));
+    const a = opts.attack ?? 0.01, r = opts.release ?? 0.08;
+    g.gain.setValueAtTime(0.0001, start);
+    g.gain.exponentialRampToValueAtTime(gain, start + a);
+    g.gain.setValueAtTime(gain, Math.max(start + a, start + dur - r));
+    g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+    o.connect(g); g.connect(dest);
+    o.start(start); o.stop(start + dur + 0.05);
+    return o;
+  }
+  function noise(start, dur, gain, dest, type = 'highpass', freq = 1000, opts = {}) {
+    const s = ctx.createBufferSource(); s.buffer = noiseBuf; s.loop = true;
+    const f = ctx.createBiquadFilter(); f.type = type; f.frequency.setValueAtTime(freq, start);
+    if (opts.to) f.frequency.exponentialRampToValueAtTime(opts.to, start + dur);
+    if (opts.q) f.Q.value = opts.q;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, start);
+    g.gain.exponentialRampToValueAtTime(gain, start + (opts.attack || 0.005));
+    g.gain.setValueAtTime(gain, start + Math.max(opts.attack || 0.005, dur * (opts.hold || 0)));
+    g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+    s.connect(f); f.connect(g); g.connect(dest);
+    s.start(start); s.stop(start + dur + 0.05);
+  }
+
+  function scheduleSong(T) {
+    const lead = ctx.createBiquadFilter(); lead.type = 'lowpass'; lead.frequency.value = 2600; lead.connect(music);
+    LINES.forEach((line, li) => {
+      const L = T + line.start;
+      const isIntro = line.pat === 'intro';
+      // melody
+      P[line.pat].forEach(([b, d, n]) => {
+        const st = L + b * BEAT, du = d * BEAT * 0.92;
+        const m = midi(n);
+        if (isIntro) {
+          osc('triangle', hz(m + 12), st, du, 0.12, lead);
+        } else {
+          osc('square', hz(m), st, du, 0.07, lead);
+          osc('triangle', hz(m + 12), st, du, 0.03, lead);
+        }
+      });
+      // harmony + bass + drums per bar
+      line.chords.forEach((c, bi) => {
+        const B = L + bi * 4 * BEAT;
+        const tri = CHORDS[c];
+        tri.forEach((m) => osc('sine', hz(m + 12), B, 4 * BEAT, 0.035, music, { attack: 0.05, release: 0.3 }));
+        for (let e = 0; e < 8; e++) {
+          const st = B + e * BEAT / 2;
+          osc('triangle', hz(tri[0] - 12 + (e % 2 ? 12 : 0)), st, BEAT / 2 * 0.85, 0.2, music);
+          noise(st, 0.04, e % 2 ? 0.05 : 0.03, music, 'highpass', 7000);   // hat
+        }
+        for (let q = 0; q < 4; q++) {
+          const st = B + q * BEAT;
+          if (q % 2 === 0) osc('sine', 150, st, 0.16, 0.7, music, { to: 40, glide: 0.14, attack: 0.002, release: 0.1 }); // kick
+          else noise(st, 0.14, 0.2, music, 'highpass', 1500);   // snare
+        }
+      });
+    });
+    // final chord
+    const end = T + LINES.length * LINE;
+    [60, 64, 67, 72].forEach((m) => osc('triangle', hz(m), end, 2.2, 0.08, music, { release: 1.5 }));
+  }
+
+  function scheduleSfx(T) {
+    // exit door creak
+    osc('sawtooth', 180, T + 4.0, 0.5, 0.03, sfx, { to: 320 });
+    // stall door + flush
+    osc('sawtooth', 220, T + 8.0, 0.4, 0.03, sfx, { to: 140 });
+    noise(T + 10.9, 2.2, 0.35, sfx, 'lowpass', 2500, { to: 300, hold: 0.3 });
+    osc('sine', 300, T + 11.0, 1.4, 0.08, sfx, { to: 120 });
+    osc('sawtooth', 220, T + 12.2, 0.4, 0.03, sfx, { to: 320 });
+    // tiptoe plinks
+    for (let i = 0; i < 10; i++) osc('sine', i % 2 ? 1400 : 1200, T + 13 + i * 0.55, 0.08, 0.05, sfx);
+    // alert sting: dun dun DUN
+    osc('sawtooth', hz(50), T + 18.45, 0.25, 0.18, sfx);
+    osc('sawtooth', hz(49), T + 18.75, 0.25, 0.18, sfx);
+    [37, 44, 49, 52].forEach((m) => osc('sawtooth', hz(m), T + 19.05, 1.6, 0.12, sfx, { release: 1.2 }));
+    noise(T + 19.0, 0.6, 0.15, sfx, 'bandpass', 400, { to: 3000, q: 2 });     // zoom whoosh
+    coo(T + 18.45);
+    // kid boing on freeze
+    osc('sine', 400, T + 21.5, 0.35, 0.15, sfx, { to: 900 });
+    // foam squish
+    noise(T + 36.8, 0.35, 0.25, sfx, 'bandpass', 800, { to: 200, q: 3 });
+    osc('sine', 600, T + 36.8, 0.25, 0.1, sfx, { to: 200 });
+    // water running
+    noise(T + 36.0, 15.0, 0.06, sfx, 'bandpass', 1800, { q: 0.7, attack: 0.3, hold: 0.95 });
+    // germ pops
+    GERM_POPS.forEach((p) => {
+      osc('sine', 500, T + p, 0.12, 0.2, sfx, { to: 1800, glide: 0.08 });
+      noise(T + p, 0.06, 0.1, sfx, 'highpass', 3000);
+    });
+    // sparkle arpeggio on clean hands
+    [84, 88, 91, 96].forEach((m, i) => osc('triangle', hz(m), T + 52.0 + i * 0.08, 0.3, 0.06, sfx));
+    coo(T + 52.2);
+    coo(T + 68.2); coo(T + 69.0);
+    // final stare sting
+    [38, 45, 50, 53].forEach((m) => osc('sawtooth', hz(m), T + 72.4, 1.5, 0.08, sfx, { release: 1.0 }));
+    noise(T + 72.3, 0.6, 0.12, sfx, 'bandpass', 400, { to: 3000, q: 2 });
+  }
+  function coo(st) {
+    // pigeon "cru-cru"
+    for (let i = 0; i < 2; i++) {
+      const s = st + i * 0.22;
+      const o = osc('sine', 330, s, 0.18, 0.18, sfx, { to: 250, glide: 0.18, attack: 0.02 });
+      const lfo = ctx.createOscillator(), lg = ctx.createGain();
+      lfo.frequency.value = 28; lg.gain.value = 40; lfo.connect(lg); lg.connect(o.frequency);
+      lfo.start(s); lfo.stop(s + 0.2);
+    }
+  }
+
+  // speech (pt-BR) — the stare needs a voice
+  const SPEECH = [
+    { t: 19.3, who: 'pombo', text: 'Já lavou as mãos!?' },
+    { t: 28.3, who: 'pombo', text: 'Já lavou as mãos!?' },
+    { t: 31.8, who: 'kid', text: 'Ainda não...' },
+    { t: 53.2, who: 'pombo', text: 'Muito bem! Mãos limpinhas!' },
+    { t: 60.2, who: 'pombo', text: 'Já lavou as mãos!?' },
+    { t: 62.2, who: 'kid', text: 'Já!' },
+    { t: 72.8, who: 'pombo', text: 'E você... já lavou as mãos!?' },
+  ];
+  let ptVoice = null;
+  function pickVoice() {
+    if (!('speechSynthesis' in window)) return;
+    const vs = speechSynthesis.getVoices();
+    ptVoice = vs.find((v) => /pt[-_]BR/i.test(v.lang)) || vs.find((v) => /^pt/i.test(v.lang)) || null;
+  }
+  if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+  function say(line) {
+    if (!voiceOn || !('speechSynthesis' in window)) return;
+    const u = new SpeechSynthesisUtterance(line.text);
+    u.lang = 'pt-BR'; if (ptVoice) u.voice = ptVoice;
+    u.pitch = line.who === 'kid' ? 1.9 : 0.6; u.rate = line.who === 'kid' ? 1.15 : 0.9; u.volume = 1;
+    if (music && ctx) {
+      music.gain.setTargetAtTime(0.35, ctx.currentTime, 0.05);
+      u.onend = () => music && music.gain.setTargetAtTime(1, ctx.currentTime, 0.2);
+    }
+    speechSynthesis.speak(u);
+  }
+
+  // ---------------------------------------------------------------- scene refs
+  const camera = $('camera'), vig = $('vig');
+  const exitDoor = $('exitDoor'), stallDoor = $('stallDoor'), flushText = $('flushText');
+  const water = $('water'), foamDrop = $('foamDrop');
+  const pombo = $('pombo'), pomboBody = $('pomboBody'), pomboHead = $('pomboHead');
+  const eyeGroup = $('eyeGroup'), eyeOpen = $('eyeOpen'), eyeHappy = $('eyeHappy');
+  const eyeWhite = $('eyeWhite'), pupil = $('pupil'), pupilShine = $('pupilShine'), alertEl = $('alert');
+  const kid = $('kid'), kidBody = $('kidBody');
+  const legBack = $('legBack'), legFront = $('legFront');
+  const armBack = $('armBack'), armFront = $('armFront'), handBack = $('handBack'), handFront = $('handFront');
+  const face = {
+    eyesNormal: $('eyesNormal'), eyesShock: $('eyesShock'), eyesHappy: $('eyesHappy'),
+    mouthSmile: $('mouthSmile'), mouthO: $('mouthO'), mouthBig: $('mouthBig'), mouthWorried: $('mouthWorried'),
+  };
+  const sweat = $('sweat');
+  const germsG = $('germs'), handFoam = $('handFoam'), sparklesG = $('sparkles');
+  const particlesG = $('particles'), confettiG = $('confetti'), bubblesG = $('bubbles');
+  const lyrics = $('lyrics'), lyBase = $('lyBase'), lyFill = $('lyFill');
+  const titleCard = $('titleCard');
+
+  const POMBO = { x: 1300, y: 600 };
+  const EYE = { x: POMBO.x + 12, y: POMBO.y - 226 };
+  const KID_SCALE = 1.2, FLOOR = 860;
+  const GERM_POPS = [40.2, 42.0, 43.8, 45.6, 47.4];
+
+  const el = (tag, attrs, parent) => {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  };
+
+  // germs: little green monsters glued to the hands
+  const germs = [
+    { hand: 'front', dx: -10, dy: -10, c: '#5cc93b' },
+    { hand: 'front', dx: 12, dy: 6, c: '#8bd346' },
+    { hand: 'back', dx: -12, dy: -4, c: '#3fae6b' },
+    { hand: 'back', dx: 8, dy: -14, c: '#6fcf3a' },
+    { hand: 'front', dx: 2, dy: 16, c: '#4cbf8a' },
+  ].map((g, i) => {
+    const grp = el('g', {}, germsG);
+    for (let k = 0; k < 6; k++) {
+      const a = k / 6 * Math.PI * 2;
+      el('line', { x1: 0, y1: 0, x2: Math.cos(a) * 12, y2: Math.sin(a) * 12, stroke: g.c, 'stroke-width': 3, 'stroke-linecap': 'round' }, grp);
+    }
+    el('circle', { r: 9, fill: g.c, stroke: '#1d5e1d', 'stroke-width': 1.5 }, grp);
+    el('circle', { cx: -3, cy: -2, r: 2.2, fill: '#fff' }, grp);
+    el('circle', { cx: 3, cy: -2, r: 2.2, fill: '#fff' }, grp);
+    el('circle', { cx: -3, cy: -2, r: 1, fill: '#000' }, grp);
+    el('circle', { cx: 3, cy: -2, r: 1, fill: '#000' }, grp);
+    el('path', { d: 'M-3,3 Q0,6 3,3', stroke: '#000', 'stroke-width': 1.3, fill: 'none' }, grp);
+    return { ...g, grp, pop: GERM_POPS[i] };
+  });
+  // foam on hands
+  const foamBlobs = Array.from({ length: 9 }, (_, i) => ({
+    e: el('circle', { r: 8 + (i % 3) * 3, fill: '#fff', stroke: '#e3f4ff', 'stroke-width': 1 }, handFoam),
+    a: i / 9 * Math.PI * 2, d: 14 + (i % 2) * 6,
+  }));
+  // sparkles around clean hands
+  const sparkles = Array.from({ length: 6 }, (_, i) => {
+    const e = el('path', { d: 'M0,-10 L3,-3 10,0 3,3 0,10 -3,3 -10,0 -3,-3Z', fill: '#fff6a8', stroke: '#f9c80e', 'stroke-width': 1.5 }, sparklesG);
+    return { e, a: i / 6 * Math.PI * 2 };
+  });
+  // soap bubbles floating around (world space)
+  const bubbles = Array.from({ length: 34 }, () => ({
+    e: el('circle', { r: 10, fill: 'rgba(200,235,255,.25)', stroke: '#e6f7ff', 'stroke-width': 2, opacity: 0 }, particlesG),
+    seed: Math.random(),
+  }));
+  // confetti (screen space)
+  const CONF_COLORS = ['#f9c80e', '#ff6b3d', '#5fb8b9', '#ff8fa3', '#7fd3ff', '#8bd346'];
+  const confetti = Array.from({ length: 60 }, (_, i) => ({
+    e: el('rect', { width: 14, height: 8, rx: 2, fill: CONF_COLORS[i % CONF_COLORS.length], opacity: 0 }, confettiG),
+    x: Math.random() * 1600, sp: 120 + Math.random() * 160, ph: Math.random() * 10, rot: Math.random() * 360,
+  }));
+
+  // speech bubbles (screen space)
+  function makeBubble(color) {
+    const g = el('g', { opacity: 0 }, bubblesG);
+    const tail = el('path', { fill: color, stroke: '#000', 'stroke-width': 5, 'stroke-linejoin': 'round' }, g);
+    const box = el('rect', { rx: 28, fill: color, stroke: '#000', 'stroke-width': 5 }, g);
+    const cover = el('rect', { fill: color }, g);
+    const text = el('text', { 'text-anchor': 'middle', 'font-size': 46, 'font-weight': 800, 'font-family': 'Baloo 2, Comic Sans MS, sans-serif', fill: '#111' }, g);
+    let current = '';
+    return {
+      set(str, ax, ay, op, side) {
+        g.setAttribute('opacity', op);
+        if (op <= 0) return;
+        if (str !== current) { text.textContent = str; current = str; }
+        const w = text.getComputedTextLength() + 60, h = 74;
+        let bx = side === 'left' ? ax - w + 60 : ax - 60;
+        bx = clamp(bx, 20, 1580 - w);
+        let by = clamp(ay - 50 - h, 16, 900 - h - 140);
+        const tx = clamp(ax, bx + 30, bx + w - 30);
+        const s = 0.85 + 0.15 * clamp(op);
+        g.setAttribute('transform', `translate(${tx},${by + h}) scale(${s}) translate(${-tx},${-(by + h)})`);
+        box.setAttribute('x', bx); box.setAttribute('y', by); box.setAttribute('width', w); box.setAttribute('height', h);
+        tail.setAttribute('d', `M${tx - 18},${by + h - 4} L${ax},${Math.max(ay, by + h + 18)} L${tx + 18},${by + h - 4}Z`);
+        cover.setAttribute('x', tx - 15); cover.setAttribute('y', by + h - 8); cover.setAttribute('width', 30); cover.setAttribute('height', 6);
+        text.setAttribute('x', bx + w / 2); text.setAttribute('y', by + 52);
+      },
+    };
+  }
+  const pomboBubble = makeBubble('#fff8c4');
+  const kidBubble = makeBubble('#ffffff');
+
+  // ---------------------------------------------------------------- timeline
+  // camera keyframes: [t, scale, focusX, focusY]
+  const CAM = [
+    [0, 1, 800, 450], [18.9, 1, 800, 450], [19.6, 2.8, EYE.x, EYE.y], [21.2, 2.8, EYE.x, EYE.y],
+    [22.2, 1, 800, 450], [26.5, 1, 800, 450], [27.6, 1.35, 1150, 470], [35.4, 1.35, 1150, 470],
+    [36.4, 1.75, 1170, 500], [51, 1.75, 1170, 500], [52.4, 1, 800, 450], [72.2, 1, 800, 450],
+    [73.4, 3.2, EYE.x, EYE.y], [80, 3.3, EYE.x, EYE.y],
+  ];
+  function cameraAt(t) {
+    let i = 0;
+    while (i < CAM.length - 2 && t > CAM[i + 1][0]) i++;
+    const a = CAM[i], b = CAM[i + 1];
+    const k = smooth(seg(t, a[0], b[0]));
+    const s = lerp(a[1], b[1], k);
+    let fx = lerp(a[2], b[2], k), fy = lerp(a[3], b[3], k);
+    const hw = 800 / s, hh = 450 / s;
+    fx = clamp(fx, hw, 1600 - hw); fy = clamp(fy, hh, 900 - hh);
+    return { s, fx, fy };
+  }
+  const toScreen = (cam, x, y) => ({ x: (x - cam.fx) * cam.s + 800, y: (y - cam.fy) * cam.s + 450 });
+
+  function kidState(t) {
+    const st = { x: 150, dir: 1, walk: false, visible: 1, face: 'smile', pose: 'idle', hop: 0, speed: 8 };
+    const walkTo = (a, b, x0, x1, tt) => { st.x = lerp(x0, x1, seg(tt, a, b)); st.walk = tt < b; st.dir = x1 > x0 ? 1 : -1; st.pose = st.walk ? 'walk' : 'idle'; };
+    if (t < 4.3) { st.visible = 0; }
+    else if (t < 8) { st.visible = seg(t, 4.3, 4.7); walkTo(4.6, 7.8, 150, 495, t); }
+    else if (t < 8.7) { st.x = 495; st.visible = 1 - seg(t, 8.4, 8.7); }
+    else if (t < 12.2) { st.x = 495; st.visible = 0; }
+    else if (t < 18.4) {
+      st.x = 495; st.visible = seg(t, 12.2, 12.5);
+      if (t > 12.7) { walkTo(12.7, 18.4, 495, 240, t); st.speed = 5; st.face = 'sneaky'; }
+    }
+    else if (t < 22.4) {
+      st.x = 240; st.dir = -1; st.pose = 'shock'; st.face = 'shock';
+      if (between(t, 21.4, 22.2)) { st.hop = Math.sin(seg(t, 21.4, 22.2) * Math.PI) * 60; }
+    }
+    else if (t < 26.6) { walkTo(22.6, 26.4, 240, 1030, t); st.face = 'worried'; st.speed = 11; if (t < 22.6) st.dir = 1; }
+    else if (t < 36) { st.x = 1030; st.pose = 'show'; st.face = t > 31 ? 'worried' : 'shock'; }
+    else if (t < 51.5) { st.x = 1030; st.pose = 'wash'; st.face = t > 40 ? 'happy' : 'smile'; }
+    else if (t < 68) {
+      st.x = 1030; st.pose = 'celebrate'; st.face = 'big';
+      st.hop = Math.abs(Math.sin((t - 52) * Math.PI / BEAT / 2)) * 22;
+      if (between(t, 59.6, 62)) { st.pose = 'show'; st.face = 'smile'; st.hop = 0; }
+    }
+    else if (t < 72) {
+      walkTo(68.4, 71.4, 1030, 150, t); st.face = 'big'; st.pose = st.walk ? 'wave' : 'idle';
+      if (t < 68.4) st.dir = 1;
+      st.visible = 1 - seg(t, 71.4, 71.8);
+    }
+    else st.visible = 0;
+    return st;
+  }
+
+  function handsFor(st, t) {
+    const sh = { x: 4, y: -200 };
+    const ph = t * st.speed;
+    switch (st.pose) {
+      case 'walk': return { sh, b: { x: -Math.sin(ph) * 30, y: -124 }, f: { x: Math.sin(ph) * 30, y: -124 } };
+      case 'shock': return { sh, shB: { x: -30, y: -205 }, shF: { x: 36, y: -205 }, b: { x: -48, y: -275 + Math.sin(t * 30) * 3 }, f: { x: 72, y: -275 + Math.cos(t * 30) * 3 } };
+      case 'show': return { sh, b: { x: 66, y: -206 + Math.sin(t * 6) * 4 }, f: { x: 100, y: -214 + Math.cos(t * 6) * 4 } };
+      case 'wash': {
+        const r = t > 38 && t < 50.5 ? 1 : 0.2;
+        return { sh, b: { x: 84 + Math.sin(t * 14) * 8 * r, y: -228 + Math.cos(t * 14) * 5 * r }, f: { x: 96 - Math.sin(t * 14) * 8 * r, y: -236 - Math.cos(t * 14) * 5 * r } };
+      }
+      case 'celebrate': return { sh, shB: { x: -30, y: -205 }, shF: { x: 36, y: -205 }, b: { x: -50 + Math.sin(t * 9) * 8, y: -320 }, f: { x: 66 - Math.sin(t * 9) * 8, y: -322 } };
+      case 'wave': return { sh, shF: { x: 30, y: -205 }, b: { x: -Math.sin(ph) * 25, y: -124 }, f: { x: 74 + Math.sin(t * 14) * 12, y: -318 } };
+      default: return { sh, b: { x: -14, y: -124 }, f: { x: 18, y: -124 } };
+    }
+  }
+
+  function setFace(kind) {
+    const on = (e, v) => e.setAttribute('opacity', v ? 1 : 0);
+    on(face.eyesNormal, kind === 'smile' || kind === 'sneaky' || kind === 'worried');
+    on(face.eyesShock, kind === 'shock');
+    on(face.eyesHappy, kind === 'happy' || kind === 'big');
+    on(face.mouthSmile, kind === 'smile' || kind === 'happy' || kind === 'sneaky');
+    on(face.mouthO, kind === 'shock');
+    on(face.mouthBig, kind === 'big');
+    on(face.mouthWorried, kind === 'worried');
+  }
+
+  // ---------------------------------------------------------------- render
+  function render(t) {
+    const cam = cameraAt(t);
+    camera.setAttribute('transform', `translate(800,450) scale(${cam.s}) translate(${-cam.fx},${-cam.fy})`);
+    const stare = clamp((cam.s - 1.8) / 1.0);
+    vig.setAttribute('opacity', 0.15 + stare * 0.75);
+
+    // doors
+    const exitOpen = Math.max(fade(t, 4.0, 5.6, 0.4), fade(t, 71.0, 72.6, 0.4));
+    exitDoor.setAttribute('transform', `translate(40,0) scale(${1 - 0.82 * exitOpen},1) translate(-40,0)`);
+    let stallOpen = Math.max(fade(t, 8.0, 9.0, 0.35), fade(t, 12.0, 12.9, 0.35));
+    const shake = between(t, 11.0, 11.9) ? Math.sin(t * 80) * 4 : 0;
+    stallDoor.setAttribute('transform', `translate(${380 + shake},0) scale(${1 - 0.8 * stallOpen},1) translate(-380,0)`);
+    const fl = fade(t, 10.9, 12.2, 0.2);
+    flushText.setAttribute('opacity', fl);
+    flushText.setAttribute('transform', `translate(495,200) scale(${0.6 + 0.5 * smooth(seg(t, 10.9, 11.3))}) rotate(${Math.sin(t * 20) * 4}) translate(-495,-200)`);
+
+    // kid
+    const st = kidState(t);
+    const bob = st.walk ? Math.abs(Math.sin(t * st.speed)) * 6 : 0;
+    kid.setAttribute('transform', `translate(${st.x},${FLOOR - st.hop - bob}) scale(${st.dir * KID_SCALE},${KID_SCALE})`);
+    kid.setAttribute('opacity', st.visible);
+    const swing = st.walk ? Math.sin(t * st.speed) * 26 : 0;
+    legBack.setAttribute('transform', `rotate(${-swing} 4 -110)`);
+    legFront.setAttribute('transform', `rotate(${swing} -4 -110)`);
+    const H = handsFor(st, t);
+    for (const [arm, hand, p, sh] of [[armBack, handBack, H.b, H.shB || H.sh], [armFront, handFront, H.f, H.shF || H.sh]]) {
+      arm.setAttribute('x1', sh.x); arm.setAttribute('y1', sh.y);
+      arm.setAttribute('x2', p.x); arm.setAttribute('y2', p.y);
+      hand.setAttribute('cx', p.x); hand.setAttribute('cy', p.y);
+    }
+    setFace(st.face);
+    sweat.setAttribute('opacity', (st.face === 'shock' || st.face === 'worried') ? 0.6 + 0.4 * Math.sin(t * 10) : 0);
+    $('kidShadow').setAttribute('opacity', 0.2 * (1 - clamp(st.hop / 80)));
+
+    // germs
+    const germVisible = t > 26.6 && t < 52;
+    germs.forEach((g, i) => {
+      const hp = g.hand === 'front' ? H.f : H.b;
+      const popK = seg(t, g.pop, g.pop + 0.25);
+      const wig = Math.sin(t * 9 + i) * 3;
+      const s = germVisible ? (t < g.pop ? 1 + 0.12 * Math.sin(t * 12 + i) : 1 + popK * 1.2) : 0;
+      g.grp.setAttribute('transform', `translate(${hp.x + g.dx + wig},${hp.y + g.dy}) scale(${s}) rotate(${wig * 6})`);
+      g.grp.setAttribute('opacity', germVisible ? 1 - popK : 0);
+    });
+
+    // foam on hands while washing
+    const foamK = t > 38 && t < 51 ? Math.min(seg(t, 37.9, 38.6), 1 - seg(t, 49.8, 51)) : 0;
+    handFoam.setAttribute('opacity', foamK);
+    const mid = { x: (H.b.x + H.f.x) / 2, y: (H.b.y + H.f.y) / 2 };
+    foamBlobs.forEach((f, i) => {
+      const a = f.a + t * 2;
+      f.e.setAttribute('cx', mid.x + Math.cos(a) * f.d);
+      f.e.setAttribute('cy', mid.y + Math.sin(a) * f.d * 0.6);
+    });
+
+    // sparkles on clean hands
+    const spk = between(t, 51.6, 68) ? fade(t, 51.6, 68, 0.4) : 0;
+    sparklesG.setAttribute('opacity', spk);
+    sparkles.forEach((s, i) => {
+      const hp = i % 2 ? H.f : H.b;
+      const a = s.a + t * 3;
+      const sc = 0.6 + 0.5 * Math.abs(Math.sin(t * 6 + i));
+      s.e.setAttribute('transform', `translate(${hp.x + Math.cos(a) * 26},${hp.y + Math.sin(a) * 26}) scale(${sc})`);
+    });
+
+    // water & foam drop
+    water.setAttribute('opacity', between(t, 36, 51.2) ? 0.85 * fade(t, 36, 51.2, 0.2) : 0);
+    water.setAttribute('height', 70 + Math.sin(t * 30) * 2);
+    const fd = seg(t, 36.9, 37.9);
+    if (between(t, 36.8, 38.1)) {
+      const sx = POMBO.x - 128, sy = POMBO.y - 236;
+      const hx = st.x + mid.x * KID_SCALE * st.dir, hy = FLOOR + mid.y * KID_SCALE;
+      const x = lerp(sx, hx, fd), y = lerp(sy, hy, fd) - Math.sin(fd * Math.PI) * 60;
+      foamDrop.setAttribute('transform', `translate(${x},${y}) scale(${0.4 + fd * 0.8})`);
+      foamDrop.setAttribute('opacity', 1);
+    } else foamDrop.setAttribute('opacity', 0);
+
+    // soap bubbles (world space)
+    const bubbleOn = between(t, 38, 68);
+    bubbles.forEach((b, i) => {
+      if (!bubbleOn) { b.e.setAttribute('opacity', 0); return; }
+      const life = 3 + b.seed * 2;
+      const local = ((t - 38) + b.seed * life * 3) % life;
+      const k = local / life;
+      const ox = st.x + mid.x * KID_SCALE, oy = FLOOR + mid.y * KID_SCALE;
+      const spread = t > 52 ? 700 : 160;
+      const x = ox + (b.seed - 0.5) * spread * k * 2 + Math.sin(t * 2 + i) * 18;
+      const y = oy - k * (t > 52 ? 650 : 380);
+      b.e.setAttribute('cx', x); b.e.setAttribute('cy', y);
+      b.e.setAttribute('r', 6 + b.seed * 16 + k * 6);
+      b.e.setAttribute('opacity', Math.sin(k * Math.PI) * fade(t, 38, 68, 0.6));
+    });
+
+    // pombo
+    const beatPh = (t % BEAT) / BEAT;
+    let bounce = 0, squash = 1;
+    if (t > 52 && t < 72) { bounce = Math.abs(Math.sin(beatPh * Math.PI)) * 14; squash = 1 - Math.abs(Math.sin(beatPh * Math.PI)) * 0.03; }
+    if (between(t, 36.6, 37.1)) squash = 1 - Math.sin(seg(t, 36.6, 37.1) * Math.PI) * 0.12; // pump!
+    const alertK = fade(t, 18.4, 19.4, 0.1);
+    if (alertK > 0) bounce = Math.max(bounce, alertK * 22);
+    pombo.setAttribute('transform', `translate(${POMBO.x},${POMBO.y - bounce})`);
+    pomboHead.setAttribute('transform', `translate(0,-140) scale(1,${squash}) translate(0,140)`);
+    alertEl.setAttribute('opacity', alertK);
+    alertEl.setAttribute('transform', `translate(20,-400) scale(${0.6 + 0.5 * alertK}) translate(-20,400)`);
+
+    const happy = fade(t, 52, 59.4, 0.25) > 0.5 || fade(t, 62.2, 68, 0.2) > 0.5;
+    eyeOpen.setAttribute('opacity', happy ? 0 : 1);
+    eyeHappy.setAttribute('opacity', happy ? 1 : 0);
+
+    // where does the eye look?
+    let tx, ty;
+    const lookViewer = t > 72.2;
+    if (lookViewer || st.visible < 0.2) {
+      tx = EYE.x + Math.sin(t * 0.9) * (t > 72.2 ? 0 : 60); ty = EYE.y + (t > 72.2 ? 0 : 20);
+      if (t < 4.3) { tx = EYE.x + Math.sin(t * 1.4) * 400; ty = EYE.y + 40; }
+      if (t > 8.6 && t < 12.2) { tx = 495; ty = 450; } // stares at the stall door
+    } else { tx = st.x + 20 * st.dir; ty = FLOOR - 270 * KID_SCALE - st.hop; }
+    let dx = tx - EYE.x, dy = ty - EYE.y;
+    const len = Math.hypot(dx, dy) || 1;
+    const maxOff = 22 * Math.min(1, len / 200);
+    dx = dx / len * maxOff; dy = dy / len * maxOff;
+    const crazy = stare > 0.1 || between(t, 26.6, 36);
+    const tremble = crazy ? Math.sin(t * 60) * 0.9 : 0;
+    const pr = stare > 0.1 ? lerp(7, 4.5, stare) : 7;
+    pupil.setAttribute('cx', dx + tremble); pupil.setAttribute('cy', dy);
+    pupil.setAttribute('r', pr);
+    pupilShine.setAttribute('cx', dx - 2 + tremble); pupilShine.setAttribute('cy', dy - 3);
+    let eyeScale = 1;
+    if (between(t, 20, 36) || between(t, 52, 68)) eyeScale = 1 + 0.08 * Math.pow(1 - beatPh, 3);
+    if (stare > 0.1) eyeScale += 0.1 * stare;
+    eyeGroup.setAttribute('transform', `translate(12,-226) scale(${eyeScale})`);
+
+    // speech bubbles
+    const pAnchor = toScreen(cam, POMBO.x - 80, POMBO.y - 300 - bounce);
+    let pText = '', pOp = 0;
+    if (between(t, 19.1, 23)) { pText = 'Já lavou as mãos!?'; pOp = fade(t, 19.1, 23, 0.25); }
+    else if (between(t, 28, 31.4)) { pText = 'Já lavou as mãos!?'; pOp = fade(t, 28, 31.4, 0.25); }
+    else if (between(t, 52.9, 57.5)) { pText = 'Muito bem! Mãos limpinhas! ✨'; pOp = fade(t, 52.9, 57.5, 0.25); }
+    else if (between(t, 60, 62.2)) { pText = 'Já lavou as mãos!?'; pOp = fade(t, 60, 62.2, 0.2); }
+    else if (between(t, 72.6, 77)) { pText = 'E VOCÊ... já lavou as mãos!?'; pOp = fade(t, 72.6, 77, 0.25); }
+    pomboBubble.set(pText, pAnchor.x, pAnchor.y, pOp, 'left');
+
+    const kAnchor = toScreen(cam, st.x + 20 * st.dir, FLOOR - 340 * KID_SCALE - st.hop);
+    let kText = '', kOp = 0;
+    if (between(t, 21.4, 22.6)) { kText = 'Eita!! 😱'; kOp = fade(t, 21.4, 22.6, 0.15); }
+    else if (between(t, 31.6, 34.6)) { kText = 'Ainda não... 😅'; kOp = fade(t, 31.6, 34.6, 0.2); }
+    else if (between(t, 62.2, 64.6)) { kText = 'JÁ!! 🙌'; kOp = fade(t, 62.2, 64.6, 0.2); }
+    kidBubble.set(kText, kAnchor.x, kAnchor.y, kOp * st.visible, 'right');
+
+    // confetti in the second chorus
+    const confOn = between(t, 52, 68.5);
+    confetti.forEach((c) => {
+      if (!confOn) { c.e.setAttribute('opacity', 0); return; }
+      const y = ((t - 52) * c.sp + c.ph * 90) % 1000 - 60;
+      const x = c.x + Math.sin(t * 2 + c.ph) * 30;
+      c.e.setAttribute('transform', `translate(${x},${y}) rotate(${c.rot + t * 200})`);
+      c.e.setAttribute('opacity', fade(t, 52, 68.5, 0.5) * 0.9);
+    });
+
+    // title card at the start
+    const tc = fade(t, 0.2, 3.8, 0.5);
+    titleCard.style.opacity = tc;
+    titleCard.style.transform = `scale(${0.9 + 0.1 * tc})`;
+
+    // lyrics (karaoke)
+    const li = Math.floor(t / LINE);
+    const line = LINES[li];
+    if (line && line.text) {
+      if (lyBase.textContent !== line.text) { lyBase.textContent = line.text; lyFill.textContent = line.text; }
+      lyFill.style.width = (clamp((t - line.start) / (LINE * 0.85)) * 100) + '%';
+      lyrics.classList.add('on');
+    } else lyrics.classList.remove('on');
+  }
+
+  // ---------------------------------------------------------------- loop
+  let spoken = new Set();
+  const now = () => (ctx ? ctx.currentTime - t0 : (performance.now() - perf0) / 1000);
+  function frame() {
+    if (!playing) return;
+    const t = now();
+    render(Math.max(0, t));
+    SPEECH.forEach((s, i) => { if (!spoken.has(i) && t >= s.t) { spoken.add(i); say(s); } });
+    if (t >= DURATION + 1.5) { stop(); return; }
+    requestAnimationFrame(frame);
+  }
+  function start() {
+    try {
+      initAudio();
+      if (ctx) {
+        if (ctx.state === 'suspended') ctx.resume();
+        t0 = ctx.currentTime + 0.15;
+        scheduleSong(t0);
+        scheduleSfx(t0);
+      }
+    } catch (e) { ctx = null; }
+    perf0 = performance.now() + 150;
+    spoken = new Set();
+    if ('speechSynthesis' in window) speechSynthesis.cancel();
+    playing = true;
+    $('startOverlay').classList.add('hidden');
+    $('endOverlay').classList.add('hidden');
+    $('voiceBtn').style.display = 'block';
+    requestAnimationFrame(frame);
+  }
+  function stop() {
+    playing = false;
+    $('endOverlay').classList.remove('hidden');
+    lyrics.classList.remove('on');
+  }
+
+  $('playBtn').addEventListener('click', start);
+  $('replayBtn').addEventListener('click', () => {
+    if (master) { master.gain.setTargetAtTime(0, ctx.currentTime, 0.05); }
+    start();
+  });
+  $('voiceBtn').addEventListener('click', () => {
+    voiceOn = !voiceOn;
+    $('voiceBtn').textContent = voiceOn ? '🗣️ Voz: on' : '🔇 Voz: off';
+    if (!voiceOn && 'speechSynthesis' in window) speechSynthesis.cancel();
+  });
+
+  // static preview behind the start screen; ?t=SECONDS jumps to a frame (handy for screenshots)
+  const q = new URLSearchParams(location.search).get('t');
+  if (q !== null) { $('startOverlay').classList.add('hidden'); render(+q); }
+  else render(26.8);
+})();
+</script>
+</body>
+</html>
